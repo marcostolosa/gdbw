@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Use proper loaded image names instead of those in pdb
 
+### Acknowledgements
+
+Thanks to [drakhaevn](https://github.com/drakhaevn) & [cavefxa](https://github.com/cavefxa) for their contributions ❤
+
 ## [0.1.1] - 2025-08-28
 
 ### Added
