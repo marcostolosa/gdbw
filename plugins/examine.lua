@@ -22,6 +22,7 @@ function examine:command(args)
     examine.valid_formats["word"] = examine.word;
     examine.valid_formats["dword"] = examine.dword;
     examine.valid_formats["qword"] = examine.qword;
+    examine.valid_formats["cstring"] = examine.cstring;
 
     ---@type integer
     local address = namespace["address"]
@@ -90,4 +91,25 @@ function examine:word(address)
     local data, size = memory:readword(address)
     if data == nil then return nil, size end
     return string.format("0x%02x", data), size
+end
+
+---Read a cstring at an address, returns string representation of data & size 
+---@param address integer
+---@return string|nil, integer
+function examine:cstring(address)
+    local read_byte
+    local size = 0
+    local data = ""
+    repeat
+        read_byte = memory:readbyte(address)
+        if read_byte == nil then return nil, size end
+        if read_byte > 0x1f and read_byte < 0x7f then
+            data = data .. string.char(read_byte)
+        else 
+            data = data .. string.format("\\x%02x", read_byte)
+        end
+        size = size + 1
+        address = address + 1
+    until read_byte == 0x00
+    return data, size
 end
