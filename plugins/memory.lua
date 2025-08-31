@@ -73,6 +73,16 @@ function memory:readptr(address)
     return string.unpack("<i8", data), ptr_size
 end
 
+---Read byte from target memory.
+---Returns data, datasize (data == nil on failure)
+---@param address integer
+---@return integer|nil, integer
+function memory:readbyte(address)
+    local data = memory:read(address, 1)
+    if data == nil then return nil, 1 end
+    return string.unpack("<i1", data) & 0xFF, 1
+end
+
 ---Read dword from target memory.
 ---Returns data, datasize (data == nil on failure)
 ---@param address integer
