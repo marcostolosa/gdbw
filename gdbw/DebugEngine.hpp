@@ -192,6 +192,8 @@ namespace gdbw::DE
 		std::expected<bool, std::string> Attach(DWORD pid, bool break_on_entry = true);
 		// Create and attach to a new process given a command line
 		std::expected<bool, std::string> CreateAndAttach(PSTR commandline, bool break_on_entry = true);
+		// Attach to a remote debug server
+		std::expected<bool, std::string> RemoteConnect(PCSTR host, PCSTR port);
 		// Enter debug loop
 		std::expected<bool, std::string> EnterDebugLoop(void);
 
@@ -251,6 +253,7 @@ namespace gdbw::DE
 		IDebugSystemObjects4* m_systemobjects = nullptr;
 		EventCallbacks* m_eventcallbacks = nullptr;
 		IOCallbacks* m_iocallbacks = nullptr;
+		ULONG64 m_server = NULL;
 	};
 }
 

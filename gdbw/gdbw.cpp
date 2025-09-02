@@ -16,6 +16,9 @@ argparse::ArgumentParser* parse_args(int argc, char** argv)
 	group.add_argument("-f", "--file")
 		.help("debug a binary on disk (e.g. C:\\tmp\\DebugMe.exe)")
 		.metavar("path");
+	parser->add_argument("-r", "--remote")
+		.help("connect to a remote debug server (e.g. 192.168.1.1:9001)")
+		.metavar("remote");
 
 	try
 	{
@@ -80,6 +83,20 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	// remote debug server connect
+	if (auto remote = args->present("-r"))
+	{
+		std::string host = remote->substr(0, remote->find(":"));
+		remote->erase(0, remote->find(":") + 1);
+		std::string port = *remote;
+		auto remote_result = g_dbg->RemoteConnect(host.c_str(), port.c_str());
+		if (!remote_result)
+		{
+			std::println("Error during Engine.RemoteConnect: {}", remote_result.error());
+			return 2;
+		}
+	}
+
 	// attach
 	if (auto attach = args->present("-a"))
 	{
@@ -87,7 +104,7 @@ int main(int argc, char** argv)
 		if (!attach_result)
 		{
 			std::println("Error during Engine.Attach: {}", attach_result.error());
-			return 2;
+			return 3;
 		}
 	}
 	else // --file
@@ -98,7 +115,7 @@ int main(int argc, char** argv)
 		if (!attach_result)
 		{
 			std::println("Error during Engine.CreateAndAttach: {}", attach_result.error());
-			return 3;
+			return 4;
 		}
 	}
 
@@ -110,7 +127,7 @@ int main(int argc, char** argv)
 	if (!debug_result)
 	{
 		std::println("Error during Engine.EnterDebugLoop: {}", debug_result.error());
-		return 4;
+		return 5;
 	}
 
 	return 0;

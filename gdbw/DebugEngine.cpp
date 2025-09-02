@@ -56,6 +56,11 @@ gdbw::DE::Engine::~Engine()
 	if (m_symmanager)
 		delete m_symmanager;
 
+	if (m_server)
+	{
+		m_client->DisconnectProcessServer(m_server);
+		m_server = NULL;
+	}
 	// release client
 	if (m_client)
 	{
@@ -119,8 +124,8 @@ std::expected<bool, std::string> gdbw::DE::Engine::Attach(DWORD pid, bool break_
 		hr = m_control->AddEngineOptions(DEBUG_ENGOPT_INITIAL_BREAK);
 		RTN_IF_ERR_HR(hr, "IDebugControl[AddEngineOptions]");
 	}
-
-	hr = m_client->AttachProcess(NULL, pid, NULL);
+	// If not connected to a server, m_server will be null by default
+	hr = m_client->AttachProcess(m_server, pid, NULL);
 	RTN_IF_ERR_HR(hr, "IDebugClient[AttachProcess]");
 
 	return true;
@@ -136,11 +141,22 @@ std::expected<bool, std::string> gdbw::DE::Engine::CreateAndAttach(PSTR commandl
 	}
 
 	ULONG flags = DEBUG_ONLY_THIS_PROCESS;
-	hr = m_client->CreateProcessAndAttach(NULL, commandline, flags, NULL, NULL);
+	// If not connected to a server, m_server will be null by default
+	hr = m_client->CreateProcessAndAttach(m_server, commandline, flags, NULL, NULL);
 	RTN_IF_ERR_HR(hr, "IDebugClient[CreateProcessAndAttach]");
 
 	return true;
 }
+
+std::expected<bool, std::string> gdbw::DE::Engine::RemoteConnect(PCSTR host, PCSTR port) 
+{
+	std::string connection_string = std::format("tcp:server={},port={}", host, port);
+
+	auto hr = m_client->ConnectProcessServer(connection_string.c_str(), &m_server);
+	RTN_IF_ERR_HR(hr, "IDebugClient[ConnectProcessServer]");
+	return true;
+}
+
 
 std::expected<bool, std::string> gdbw::DE::Engine::EnterDebugLoop(void)
 {
