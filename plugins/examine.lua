@@ -1,7 +1,7 @@
 examine = {
     iscommand=true;
     alias={"examine", "x"};
-    help="usage: examine [address] [-c count]";
+    help="usage: examine [address] [-f format] [-c count]";
     valid_formats={};
 }
 
@@ -9,8 +9,7 @@ function examine:parseargs(args)
     local parser = ArgumentParser;
     parser:init("examine", "display memory contents at a given address", false)
     parser:AddArgument("address", "address of memory content", true, "store", Evaluate)
-    -- TODO: implement format specifiers
-    parser:AddArgument({"-f", "--format"}, "format to display data (e.g. gx)", false, "store", nil)
+    parser:AddArgument({"-f", "--format"}, "format to display data [word/dword/qword/cstring]", false, "store", nil)
     parser:AddArgument({"-c", "--count"}, "number of items to display (e.g. 10)", false, "store", math.tointeger)
     return parser:ParseArgs(args)
 end
