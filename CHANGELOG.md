@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.0] - 2025-09-03
+
+### Added
+
+- Initial remote debugging implementation (Unauthenticated TCP only)
+- `--remote` (`-r`) flag for remote debugging
+- `setup.ps1` script to remove some pains from the installation process.
+- Message is now printed when loading symbols
+
+### Changed
+
+- Added `.dll` files to `.gitignore`
+- Renamed `--file` (`-f`) to `--commandline` (`-c`) as it was misleading
+
+### Fixed
+
+- Symbol manager initialisation no longer uses duplicated handles
+
 ## [0.1.2] - 2025-08-31
 
 ### Added
@@ -51,6 +69,7 @@ Thanks to [drakhaevn](https://github.com/drakhaevn) & [cavefxa](https://github.c
 - Disassembly
 - Plugin System
 
+[0.2.0]: https://github.com/iiLegacyyii/gdbw/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/iiLegacyyii/gdbw/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/iiLegacyyii/gdbw/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/iiLegacyyii/gdbw/releases/tag/v0.1.0
