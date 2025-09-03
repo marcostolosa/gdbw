@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Symbol manager initialisation no longer uses duplicated handles
 
+### Acknowledgements
+
+Thanks to [drakhaevn](https://github.com/drakhaevn) for their contributions ❤
+
 ## [0.1.2] - 2025-08-31
 
 ### Added
