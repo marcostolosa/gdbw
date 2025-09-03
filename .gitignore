@@ -11,6 +11,7 @@ Tests/
 plugins/test.lua
 *.7z
 *.res
+*.dll
 
 
 ## Ignore Visual Studio temporary files, build results, and
