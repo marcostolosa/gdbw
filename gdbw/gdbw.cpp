@@ -13,8 +13,8 @@ argparse::ArgumentParser* parse_args(int argc, char** argv)
 	group.add_argument("-a", "--attach")
 		.help("attach to a process via pid (e.g. 12004)")
 		.metavar("pid");
-	group.add_argument("-f", "--file")
-		.help("debug a binary on disk (e.g. C:\\tmp\\DebugMe.exe)")
+	group.add_argument("-c", "--commandline")
+		.help("debug a binary on disk (e.g. \"cmd.exe /c whoami\")")
 		.metavar("path");
 	parser->add_argument("-r", "--remote")
 		.help("connect to a remote debug server (e.g. 192.168.1.1:9001)")
@@ -107,11 +107,11 @@ int main(int argc, char** argv)
 			return 3;
 		}
 	}
-	else // --file
+	else // --commandline
 	{
-		auto file = args->present("-f");
+		auto commandline = args->present("-c");
 		// TODO: add --no-entrybreak flag
-		auto attach_result = g_dbg->CreateAndAttach((PSTR)file->c_str());
+		auto attach_result = g_dbg->CreateAndAttach((PSTR)commandline->c_str());
 		if (!attach_result)
 		{
 			std::println("Error during Engine.CreateAndAttach: {}", attach_result.error());
