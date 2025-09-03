@@ -56,6 +56,11 @@ gdbw::DE::Engine::~Engine()
 	if (m_symmanager)
 		delete m_symmanager;
 
+	if (m_server)
+	{
+		m_client->DisconnectProcessServer(m_server);
+		m_server = NULL;
+	}
 	// release client
 	if (m_client)
 	{
@@ -65,9 +70,6 @@ gdbw::DE::Engine::~Engine()
 
 	// remove lua reference
 	if (m_lua) m_lua = nullptr;
-
-	if (m_hdebuggee)
-		CloseHandle(m_hdebuggee);
 }
 
 std::expected<bool, std::string> gdbw::DE::Engine::Init(gdbw::LuaManager* lua)
@@ -119,8 +121,8 @@ std::expected<bool, std::string> gdbw::DE::Engine::Attach(DWORD pid, bool break_
 		hr = m_control->AddEngineOptions(DEBUG_ENGOPT_INITIAL_BREAK);
 		RTN_IF_ERR_HR(hr, "IDebugControl[AddEngineOptions]");
 	}
-
-	hr = m_client->AttachProcess(NULL, pid, NULL);
+	// If not connected to a server, m_server will be null by default
+	hr = m_client->AttachProcess(m_server, pid, NULL);
 	RTN_IF_ERR_HR(hr, "IDebugClient[AttachProcess]");
 
 	return true;
@@ -136,11 +138,22 @@ std::expected<bool, std::string> gdbw::DE::Engine::CreateAndAttach(PSTR commandl
 	}
 
 	ULONG flags = DEBUG_ONLY_THIS_PROCESS;
-	hr = m_client->CreateProcessAndAttach(NULL, commandline, flags, NULL, NULL);
+	// If not connected to a server, m_server will be null by default
+	hr = m_client->CreateProcessAndAttach(m_server, commandline, flags, NULL, NULL);
 	RTN_IF_ERR_HR(hr, "IDebugClient[CreateProcessAndAttach]");
 
 	return true;
 }
+
+std::expected<bool, std::string> gdbw::DE::Engine::RemoteConnect(PCSTR host, PCSTR port) 
+{
+	std::string connection_string = std::format("tcp:server={},port={}", host, port);
+
+	auto hr = m_client->ConnectProcessServer(connection_string.c_str(), &m_server);
+	RTN_IF_ERR_HR(hr, "IDebugClient[ConnectProcessServer]");
+	return true;
+}
+
 
 std::expected<bool, std::string> gdbw::DE::Engine::EnterDebugLoop(void)
 {
@@ -337,16 +350,13 @@ std::expected<bool, std::string> gdbw::DE::Engine::HandleFirstEvent()
 	if (m_symmanager == nullptr)
 	{
 		// Get handle to debuggee (need this for bindings & duplicating for sym resolution)
-		ULONG pid = -1;
-		auto hr = m_systemobjects->GetCurrentProcessSystemId(&pid);
-		RTN_IF_ERR_HR(hr, "IDebugSystemObjects4[GetCurrentProcessSystemId]");
-		m_hdebuggee = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-		if (!m_hdebuggee)
-			return std::unexpected("Failed to open handle to target process");
+		ULONG64 hdebuggee = NULL;
+		auto hr = m_systemobjects->GetCurrentProcessHandle(&hdebuggee);
+		RTN_IF_ERR_HR(hr, "IDebugSystemObjects4[GetCurrentProcessHandle]");
 
 		// Initialize symbol manager
-		m_symmanager = new SymbolManager();
-		auto symmanager_result = m_symmanager->Init(m_hdebuggee);
+		m_symmanager = new SymbolManager((HANDLE)hdebuggee);
+		auto symmanager_result = m_symmanager->Init();
 		if (!symmanager_result)
 			return std::unexpected(symmanager_result.error());
 	}
@@ -357,6 +367,6 @@ std::expected<bool, std::string> gdbw::DE::Engine::HandleFirstEvent()
 
 	// TODO: since we're doing this anyways for expression evaluation,
 	// ...we may as well move all symbol management to `m_symbols`? 
-	m_control->Execute(DEBUG_OUTCTL_IGNORE, ".reload /f", DEBUG_EXECUTE_NOT_LOGGED);
+	//m_control->Execute(DEBUG_OUTCTL_IGNORE, ".reload /f", DEBUG_EXECUTE_NOT_LOGGED);
 	return true;
 }
