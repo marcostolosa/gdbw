@@ -345,7 +345,12 @@ std::expected<bool, std::string> gdbw::DE::Engine::WaitAndHandleDebugEvent(bool 
 }
 
 std::expected<bool, std::string> gdbw::DE::Engine::HandleFirstEvent()
-{	
+{
+	std::println(
+		"Loading symbols, this may take a while if you're debugging a new target"
+		" (may also occur on initial context switch for syswow64 binaries)"
+	);
+
 	// Now we're attached - initialize the symbol manager
 	if (m_symmanager == nullptr)
 	{
