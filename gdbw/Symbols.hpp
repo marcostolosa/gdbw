@@ -26,10 +26,10 @@ namespace gdbw
 	class SymbolManager
 	{
 	public:
-		SymbolManager() = default;
+		SymbolManager(HANDLE hdebuggee);
 		~SymbolManager();
 
-		std::expected<bool, std::string> Init(HANDLE debuggee);
+		std::expected<bool, std::string> Init();
 		std::expected<Symbol*, std::string> SymbolFromAddress(DWORD64 address);
 		std::expected<Symbol*, std::string> SymbolFromName(PCSTR name);
 		std::expected<bool, std::string> RefreshModuleList(void);

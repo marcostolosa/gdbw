@@ -70,9 +70,6 @@ gdbw::DE::Engine::~Engine()
 
 	// remove lua reference
 	if (m_lua) m_lua = nullptr;
-
-	if (m_hdebuggee)
-		CloseHandle(m_hdebuggee);
 }
 
 std::expected<bool, std::string> gdbw::DE::Engine::Init(gdbw::LuaManager* lua)
@@ -353,16 +350,13 @@ std::expected<bool, std::string> gdbw::DE::Engine::HandleFirstEvent()
 	if (m_symmanager == nullptr)
 	{
 		// Get handle to debuggee (need this for bindings & duplicating for sym resolution)
-		ULONG pid = -1;
-		auto hr = m_systemobjects->GetCurrentProcessSystemId(&pid);
-		RTN_IF_ERR_HR(hr, "IDebugSystemObjects4[GetCurrentProcessSystemId]");
-		m_hdebuggee = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-		if (!m_hdebuggee)
-			return std::unexpected("Failed to open handle to target process");
+		ULONG64 hdebuggee = NULL;
+		auto hr = m_systemobjects->GetCurrentProcessHandle(&hdebuggee);
+		RTN_IF_ERR_HR(hr, "IDebugSystemObjects4[GetCurrentProcessHandle]");
 
 		// Initialize symbol manager
-		m_symmanager = new SymbolManager();
-		auto symmanager_result = m_symmanager->Init(m_hdebuggee);
+		m_symmanager = new SymbolManager((HANDLE)hdebuggee);
+		auto symmanager_result = m_symmanager->Init();
 		if (!symmanager_result)
 			return std::unexpected(symmanager_result.error());
 	}
@@ -373,6 +367,6 @@ std::expected<bool, std::string> gdbw::DE::Engine::HandleFirstEvent()
 
 	// TODO: since we're doing this anyways for expression evaluation,
 	// ...we may as well move all symbol management to `m_symbols`? 
-	m_control->Execute(DEBUG_OUTCTL_IGNORE, ".reload /f", DEBUG_EXECUTE_NOT_LOGGED);
+	//m_control->Execute(DEBUG_OUTCTL_IGNORE, ".reload /f", DEBUG_EXECUTE_NOT_LOGGED);
 	return true;
 }

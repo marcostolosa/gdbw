@@ -240,7 +240,6 @@ namespace gdbw::DE
 		// To be called upon first attach, gets target information to be used in commands.
 		std::expected<bool, std::string> HandleFirstEvent();
 		State m_state = State::NONE;
-		HANDLE m_hdebuggee = INVALID_HANDLE_VALUE;
 		uint8_t m_debuggeebitness = 0;
 		std::vector<PDEBUG_BREAKPOINT> m_breakpoints;
 		LuaManager* m_lua = nullptr;

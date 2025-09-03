@@ -1,24 +1,27 @@
 #include "Symbols.hpp"
 
+gdbw::SymbolManager::SymbolManager(HANDLE hdebuggee)
+{
+	m_hdebuggee = hdebuggee;
+}
+
 gdbw::SymbolManager::~SymbolManager()
 {
 	SymCleanup(m_hdebuggee);
 	CloseHandle(m_hdebuggee);
 }
 
-std::expected<bool, std::string> gdbw::SymbolManager::Init(HANDLE debuggee)
+std::expected<bool, std::string> gdbw::SymbolManager::Init()
 {
-	// We should duplicate the handle to ensure it is unique
-	// https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-syminitialize
-	if (!DuplicateHandle(
-		GetCurrentProcess(), debuggee, GetCurrentProcess(), &m_hdebuggee,
-		NULL, FALSE, DUPLICATE_SAME_ACCESS))
-	{
-		return std::unexpected(std::format("Error duplicating debugge handle for symbol resolution ({:#x})", GetLastError()));
-	}
-	SymSetOptions(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS | SYMOPT_INCLUDE_32BIT_MODULES);
+	SymSetOptions(SYMOPT_UNDNAME
+				| SYMOPT_DEFERRED_LOADS
+				| SYMOPT_INCLUDE_32BIT_MODULES
+				| SYMOPT_EXACT_SYMBOLS
+				| SYMOPT_ALLOW_ABSOLUTE_SYMBOLS
+				| SYMOPT_AUTO_PUBLICS
+	);
 	
-	if (!SymInitialize(m_hdebuggee, NULL, TRUE))
+	if (!SymInitialize(m_hdebuggee, NULL, FALSE))
 		return std::unexpected(std::format("Error during SymInitialize: ({:#x})", GetLastError()));
 
 	return true;
